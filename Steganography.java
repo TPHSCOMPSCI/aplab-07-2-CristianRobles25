@@ -26,6 +26,31 @@ public class Steganography {
         }
         return copy;
     }
+public static Picture hideText(Picture source, String s) {
+        Picture copy = new Picture(source);
+        ArrayList<Integer> codes = encodeString(s);
+        Pixel[][] pixels = copy.getPixels2D();
+        int index = 0;
+        outer:
+        for (int r = 0; r < pixels.length; r++) {
+            for (int c = 0; c < pixels[0].length; c++) {
+                if (index >= codes.size()) break outer;
+                int code = codes.get(index);
+                int redBits = (code >> 4) & 0x3;
+                int greenBits = (code >> 2) & 0x3;
+                int blueBits = code & 0x3;
+                int red = (pixels[r][c].getRed() / 4) * 4 + redBits;
+                int green = (pixels[r][c].getGreen() / 4) * 4 + greenBits;
+                int blue = (pixels[r][c].getBlue() / 4) * 4 + blueBits;
+                pixels[r][c].setColor(new Color(red, green, blue));
+                index++;
+            }
+        }
+        if (index < codes.size()) {
+            System.out.println("Warning: Not enough pixels to hide the entire message.");
+        }
+        return copy;
+    }
     public static String revealText(Picture source) {
         Pixel[][] pixels = source.getPixels2D();
         ArrayList<Integer> codes = new ArrayList<Integer>();
