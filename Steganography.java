@@ -26,4 +26,20 @@ public class Steganography {
         }
         return copy;
     }
+    public static String revealText(Picture source) {
+        Pixel[][] pixels = source.getPixels2D();
+        ArrayList<Integer> codes = new ArrayList<Integer>();
+        outer:
+        for (int r = 0; r < pixels.length; r++) {
+            for (int c = 0; c < pixels[0].length; c++) {
+                int redLow = pixels[r][c].getRed() % 4;
+                int greenLow = pixels[r][c].getGreen() % 4;
+                int blueLow = pixels[r][c].getBlue() % 4;
+                int code = (redLow << 4) | (greenLow << 2) | blueLow;
+                codes.add(code);
+                if (code == 0) break outer;
+            }
+        }
+        return decodeString(codes);
+    }
 }
