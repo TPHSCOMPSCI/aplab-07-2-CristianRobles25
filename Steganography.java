@@ -1,21 +1,65 @@
+import java.awt.Color;
+import java.awt.Point;
+import java.util.ArrayList;
 public class Steganography {
     public static void main(String[] args) {
-        Picture hall = new Picture("femaleLionAndHall.jpg");
-        Picture robot2 = new Picture("robot.jpg");
-        Picture flower2 = new Picture("flower1.jpg");
-// hide pictures
-        Picture hall2 = hidePicture2(hall, robot2, 50, 300);
-        Picture hall3 = hidePicture2(hall2, flower2, 115, 275);
-        hall3.explore();
-        if(!isSame(hall, hall3))
-{
-        Picture hall4 = showDifferentArea(hall, findDifferences(hall, hall3));
-        hall4.show();
-        Picture unhiddenHall3 = revealPicture(hall3);
-        unhiddenHall3.show();
+        Picture beach = new Picture("beach.jpg");
+       Picture motorcycle = new Picture("blueMotorcycle.jpg");
+       Picture hidden = hidePicture(beach, motorcycle);
+       hidden.explore();
+       Picture robot = new Picture("robot.jpg");
+       Picture flower1 = new Picture("flower1.jpg");
+       beach.explore();
+       Picture hidden1 = hidePicture2(beach, robot, 65, 208);
+       Picture hidden2 = hidePicture2(hidden1, flower1, 280, 110);
+       hidden2.explore();
+       Picture unhidden = revealPicture(hidden2);
+       unhidden.explore();
+       Picture swan = new Picture("swan.jpg");
+       Picture swan2 = new Picture("swan.jpg");
+       System.out.println("Swan and swan2 are the same: " +
+       isSame(swan, swan2));
+       swan = testClearLow(swan);
+       System.out.println("Swan and swan2 are the same (after clearLow run on swan): "
+       + isSame(swan, swan2));
+       Picture arch = new Picture("arch.jpg");
+       Picture arch2 = new Picture("arch.jpg");
+       Picture koala = new Picture("koala.jpg") ;
+       Picture robot1 = new Picture("robot.jpg");
+       ArrayList<Point> pointList = findDifferences(arch, arch2);
+       System.out.println("PointList after comparing two identical pictures " +
+       "has a size of " + pointList.size());
+       pointList = findDifferences(arch, koala);
+       System.out.println("PointList after comparing two different sized pictures " + "has a size of " + pointList.size());
+       arch2 = hidePicture2(arch, robot1, 65, 102);
+       pointList = findDifferences(arch, arch2);
+       System.out.println("Pointlist after hiding a picture has a size of " + pointList.size());
+       arch.show();
+       arch2.show(); 
+       Picture hall = new Picture("femaleLionAndHall.jpg");
+       Picture robot2 = new Picture("robot.jpg");
+       Picture flower2 = new Picture("flower1.jpg");
+       Picture hall2 = hidePicture2(hall, robot2, 50, 300);
+       Picture hall3 = hidePicture2(hall2, flower2, 115, 275);
+       hall3.explore();
+       if(!isSame(hall, hall3)) {
+       Picture hall4 = showDifferentArea(hall,
+           findDifferences(hall, hall3));
+       hall4.show();
+       Picture unhiddenHall3 = revealPicture(hall3);
+       unhiddenHall3.show(); 
+       }
+       String hiddenMessage = "WHY HELLO THERE";
+       System.out.println("Hidden message: " + hiddenMessage);
+       hideText(beach, hiddenMessage);
+       beach.explore();
+       String revealedMessage = revealText(beach);
+       System.out.println("Revealed message: " + revealedMessage);
+
+
         } 
 
-    }
+    
     public static void clearLow(Pixel p){
         p.setRed((p.getRed()/4)*4);
         p.setGreen((p.getGreen()/4)*4);
@@ -171,15 +215,34 @@ public class Steganography {
             return pointList;
         }
     }
-    public static Picture showDifferentArea(Picture p, ArrayList<Point> a){
-        Picture copy = new Picture(p);
-        Pixel[][] picture = copy.getPixels2D();
-        for (Point c: a){
-            picture[(int) c.getX()][(int) c.getY()].setRed(200);
-            picture[(int) c.getX()][(int) c.getY()].getGreen(200);
-            picture[(int) c.getX()][(int) c.getY()].setBlue(200);
-        }
-        return copy;
+    public static Picture showDifferentArea(Picture p, ArrayList<Point> differences){
+        int minRow = Integer.MAX_VALUE, maxRow = Integer.MIN_VALUE;
+       int minCol = Integer.MAX_VALUE, maxCol = Integer.MIN_VALUE;
+       for (Point point : differences) {
+           int row = point.x;
+           int col = point.y;
+           if (row < minRow) minRow = row;
+           if (row > maxRow) maxRow = row;
+           if (col < minCol) minCol = col;
+           if (col > maxCol) maxCol = col;
+       }
+       Picture result = new Picture(p);
+       Pixel[][] pixels = result.getPixels2D();
+       Color rectColor = Color.RED;
+       for (int c = minCol; c <= maxCol; c++) {
+           if (minRow >= 0 && minRow < pixels.length)
+               pixels[minRow][c].setColor(rectColor);
+           if (maxRow >= 0 && maxRow < pixels.length)
+               pixels[maxRow][c].setColor(rectColor);
+       }
+       for (int r = minRow; r <= maxRow; r++) {
+           if (minCol >= 0 && minCol < pixels[0].length)
+               pixels[r][minCol].setColor(rectColor);
+           if (maxCol >= 0 && maxCol < pixels[0].length)
+               pixels[r][maxCol].setColor(rectColor);
+       }
+       return result;
+
     }
     public static ArrayList<Integer> encodeString(String s){
         s = s.toUpperCase();
@@ -218,7 +281,7 @@ public class Steganography {
         }
         return bits;
     }
-public static Picture hideText(Picture source, String s) {
+    public static Picture hideText(Picture source, String s) {
         Picture copy = new Picture(source);
         ArrayList<Integer> codes = encodeString(s);
         Pixel[][] pixels = copy.getPixels2D();
@@ -258,5 +321,17 @@ public static Picture hideText(Picture source, String s) {
             }
         }
         return decodeString(codes);
+    }
+    private static Picture setBlack(Picture P){
+        Picture copy = new Picture(P);
+        Pixel[][] pixels = copy.getPixels2D();
+        for (int i = 0; i<pixels.length;i++){
+            for(int j = 0; j<pixels[0].length; j++){
+                pixels[i][j].setRed(0);
+                pixels[i][j].setGreen(0);
+                pixels[i][j].setBlue(0);
+            }
+        }
+        return copy;
     }
 }
